@@ -33,3 +33,10 @@ sensor:
 <img width="1765" alt="image" src="https://user-images.githubusercontent.com/6293952/191039960-5a75aa65-6066-41c5-a94e-03d4a2d3f546.png">
 
 - 保存，完成编辑，查看效果。
+
+## 交流
+- QQ群：198841186
+
+- 微信群：(添加该机器人，发送“进群”会自动发送邀请链接）
+  
+![xiaomi miot weixin group](https://user-images.githubusercontent.com/4549099/161735971-0540ce1c-eb49-4aff-8cb3-3bdad15e22f7.png)
