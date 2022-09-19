@@ -2,7 +2,8 @@
 
 ## 使用方法：
 
-- 下载该集成放入homeassistant安装目录`/config/custom_conponents/`中
+- 下载该仓库中的oilprice.zip
+- 解压后，连同文件夹放入homeassistant安装目录`/config/custom_conponents/`中 （完整目录应该是/config/custom_conponents/oilprice）
 - 然后重启Home Assistant服务。
 - 启动完成后，在`/config/configuration.yaml`添加以下内容
 
