@@ -30,13 +30,3 @@
 - 旧卡片若读取 `state_attr(sensor.xxx, 'gas92')`，需改为读取独立实体状态（如 `states('sensor.you_jia_bei_jing_gas92')`）。
 - 升级后建议重启 Home Assistant 或重载一次本集成以完成迁移。
 
----
-
-## 商店更新日志（可直接用于 HACS）
-
-- 重构为 UI 配置集成，支持地区选择与更新周期配置（1-168 小时）。
-- 改为多实体输出：`gas92/gas95/gas98/die0/time/tips/update_time/friendly_name`。
-- 新增“立即更新”按钮（设备页控制可一键刷新）。
-- 自动迁移 `you_jie` 到 `you_jia`，并清理旧单实体。
-- 新增亮色/深色两套 Lovelace 卡片模板。
-
