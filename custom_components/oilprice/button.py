@@ -41,7 +41,7 @@ class OilPriceRefreshButton(CoordinatorEntity[OilPriceDataUpdateCoordinator], Bu
         self._region_name = region_name(region)
         self._region_slug = slugify(self._region_name)
         self._attr_unique_id = f"{entry.entry_id}_refresh"
-        self._attr_object_id = f"you_jia_{self._region_slug}_refresh"
+        self._attr_object_id = f"you_jie_{self._region_slug}_refresh"
         self._attr_name = f"油价-{self._region_name}-立即更新"
 
     async def async_press(self) -> None:

@@ -21,6 +21,59 @@ from .const import (
 from .coordinator import OilPriceDataUpdateCoordinator
 
 
+def _normalize_entity_ids(
+    entity_registry: er.EntityRegistry,
+    entry: ConfigEntry,
+    region: str,
+) -> None:
+    """Normalize entity IDs to the stable `you_jie_*` pattern."""
+    region_slug = slugify(region_name(region))
+
+    expected_sensor_ids = {
+        key: f"sensor.you_jie_{region_slug}_{key}" for key in SENSOR_STATE_KEYS
+    }
+    expected_button_id = f"button.you_jie_{region_slug}_refresh"
+
+    legacy_sensor_unique_ids = {
+        f"{entry.entry_id}_oilprice",
+        f"{entry.entry_id}_{region}",
+    }
+
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity_entry.domain == "sensor" and entity_entry.unique_id in legacy_sensor_unique_ids:
+            # Drop the old single-sensor model.
+            entity_registry.async_remove(entity_entry.entity_id)
+            continue
+
+        if entity_entry.domain == "sensor" and entity_entry.unique_id:
+            prefix = f"{entry.entry_id}_"
+            if entity_entry.unique_id.startswith(prefix):
+                field_key = entity_entry.unique_id[len(prefix) :]
+                target_entity_id = expected_sensor_ids.get(field_key)
+                if target_entity_id and entity_entry.entity_id != target_entity_id:
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id,
+                        new_entity_id=target_entity_id,
+                    )
+
+        if (
+            entity_entry.domain == "button"
+            and entity_entry.unique_id == f"{entry.entry_id}_refresh"
+            and entity_entry.entity_id != expected_button_id
+        ):
+            entity_registry.async_update_entity(
+                entity_entry.entity_id,
+                new_entity_id=expected_button_id,
+            )
+
+        # Compatibility cleanup from previous naming attempts.
+        if "you_jia" in entity_entry.entity_id:
+            entity_registry.async_update_entity(
+                entity_entry.entity_id,
+                new_entity_id=entity_entry.entity_id.replace("you_jia", "you_jie"),
+            )
+
+
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload entry when options are updated."""
     await hass.config_entries.async_reload(entry.entry_id)
@@ -52,6 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Ensure existing and newly-created entities converge to one stable ID pattern.
+    _normalize_entity_ids(er.async_get(hass), entry, region)
     return True
 
 
@@ -83,58 +139,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             version=2,
         )
 
-    if entry.version == 2:
-        entity_registry = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-            if "you_jie" in entity_entry.entity_id:
-                entity_registry.async_update_entity(
-                    entity_entry.entity_id,
-                    new_entity_id=entity_entry.entity_id.replace("you_jie", "you_jia"),
-                )
-
-        hass.config_entries.async_update_entry(entry, version=3)
-
-    if entry.version == 3:
-        entity_registry = er.async_get(hass)
-        region = entry.data[CONF_REGION]
-        region_slug = slugify(region_name(region))
-
-        expected_sensor_ids = {
-            key: f"sensor.you_jia_{region_slug}_{key}" for key in SENSOR_STATE_KEYS
-        }
-        expected_button_id = f"button.you_jia_{region_slug}_refresh"
-
-        legacy_sensor_unique_ids = {
-            f"{entry.entry_id}_oilprice",
-            f"{entry.entry_id}_{region}",
-        }
-
-        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-            if entity_entry.domain == "sensor" and entity_entry.unique_id in legacy_sensor_unique_ids:
-                # Remove old single-entity model so users only keep the new multi-sensor model.
-                entity_registry.async_remove(entity_entry.entity_id)
-                continue
-
-            if entity_entry.domain == "sensor" and entity_entry.unique_id:
-                prefix = f"{entry.entry_id}_"
-                if entity_entry.unique_id.startswith(prefix):
-                    field_key = entity_entry.unique_id[len(prefix) :]
-                    target_entity_id = expected_sensor_ids.get(field_key)
-                    if target_entity_id and entity_entry.entity_id != target_entity_id:
-                        entity_registry.async_update_entity(
-                            entity_entry.entity_id,
-                            new_entity_id=target_entity_id,
-                        )
-
-            if (
-                entity_entry.domain == "button"
-                and entity_entry.unique_id == f"{entry.entry_id}_refresh"
-                and entity_entry.entity_id != expected_button_id
-            ):
-                entity_registry.async_update_entity(
-                    entity_entry.entity_id,
-                    new_entity_id=expected_button_id,
-                )
-
+    if entry.version in (2, 3):
+        _normalize_entity_ids(er.async_get(hass), entry, entry.data[CONF_REGION])
         hass.config_entries.async_update_entry(entry, version=4)
+
     return True

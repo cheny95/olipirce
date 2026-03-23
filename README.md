@@ -39,15 +39,15 @@
 
 ### 新实体模型（示例：北京）
 
-- `sensor.you_jia_bei_jing_gas92`
-- `sensor.you_jia_bei_jing_gas95`
-- `sensor.you_jia_bei_jing_gas98`
-- `sensor.you_jia_bei_jing_die0`
-- `sensor.you_jia_bei_jing_time`
-- `sensor.you_jia_bei_jing_tips`
-- `sensor.you_jia_bei_jing_update_time`
-- `sensor.you_jia_bei_jing_friendly_name`
-- `button.you_jia_bei_jing_refresh`
+- `sensor.you_jie_bei_jing_gas92`
+- `sensor.you_jie_bei_jing_gas95`
+- `sensor.you_jie_bei_jing_gas98`
+- `sensor.you_jie_bei_jing_die0`
+- `sensor.you_jie_bei_jing_time`
+- `sensor.you_jie_bei_jing_tips`
+- `sensor.you_jie_bei_jing_update_time`
+- `sensor.you_jie_bei_jing_friendly_name`
+- `button.you_jie_bei_jing_refresh`
 
 ### 修改更新周期
 
@@ -60,8 +60,8 @@
 
 - 开发者工具-状态-实体-输入筛选实体
 - 输入 `油价` 关键字进行筛选
-- 确认已生成多个独立实体（如 `sensor.you_jia_bei_jing_gas92`）
-- 点击 `button.you_jia_bei_jing_refresh` 可立即刷新油价
+- 确认已生成多个独立实体（如 `sensor.you_jie_bei_jing_gas92`）
+- 点击 `button.you_jie_bei_jing_refresh` 可立即刷新油价
 - 查看是否有数据，形如：
 <img width="1267" height="918" alt="image" src="https://github.com/user-attachments/assets/6a9f1f20-1ee9-40f3-982b-3c2e0c7b699b" />
 
@@ -73,8 +73,8 @@
    - 亮色版：`油价卡片模板.yaml`
    - 深色版：`油价卡片模板-深色.yaml`
 4. 把模板中的实体替换为你自己的实体（重点改这两个）：
-   - `sensor.you_jia_bei_jing_gas92`（及同地区的其它 `sensor.you_jia_bei_jing_*`）
-   - `button.you_jia_bei_jing_refresh`
+   - `sensor.you_jie_bei_jing_gas92`（及同地区的其它 `sensor.you_jie_bei_jing_*`）
+   - `button.you_jie_bei_jing_refresh`
 5. 保存卡片后返回概览，即可查看油价并点击“立即更新”。
 
 > 提示：如果你添加的是其他地区，只需要把实体中的 `bei_jing` 替换为对应地区 slug。

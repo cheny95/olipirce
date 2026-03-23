@@ -66,7 +66,7 @@ class OilPriceFieldSensor(CoordinatorEntity[OilPriceDataUpdateCoordinator], Sens
         self._attr_icon = icon if field_key != "gas92" else ICON
 
         self._attr_unique_id = f"{entry.entry_id}_{field_key}"
-        self._attr_object_id = f"you_jia_{self._region_slug}_{field_key}"
+        self._attr_object_id = f"you_jie_{self._region_slug}_{field_key}"
         self._attr_name = f"油价-{self._region_name}-{field_name}"
 
     @property

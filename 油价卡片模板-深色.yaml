@@ -6,7 +6,7 @@ cards:
       <div style="background:#111827;border:1px solid #334155;border-radius:12px;padding:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <span style="color:#93c5fd;font-weight:700;">实时油价</span>
-          <span style="color:#94a3b8;font-size:12px;">{{ states('sensor.you_jia_bei_jing_update_time') or '暂无更新时间' }}</span>
+          <span style="color:#94a3b8;font-size:12px;">{{ states('sensor.you_jie_bei_jing_update_time') or '暂无更新时间' }}</span>
         </div>
         <table style="width:100%;border-collapse:collapse;text-align:center;font-size:15px;color:#e5e7eb;">
           <tr style="border-bottom:1px solid #334155;">
@@ -15,19 +15,19 @@ cards:
           </tr>
           <tr>
             <td style="padding:10px 4px;">92# 汽油</td>
-            <td style="padding:10px 4px;color:#f87171;"><b>{{ states('sensor.you_jia_bei_jing_gas92') or '-' }}</b></td>
+            <td style="padding:10px 4px;color:#f87171;"><b>{{ states('sensor.you_jie_bei_jing_gas92') or '-' }}</b></td>
           </tr>
           <tr style="background:rgba(148,163,184,0.12);">
             <td style="padding:10px 4px;">95# 汽油</td>
-            <td style="padding:10px 4px;color:#fbbf24;"><b>{{ states('sensor.you_jia_bei_jing_gas95') or '-' }}</b></td>
+            <td style="padding:10px 4px;color:#fbbf24;"><b>{{ states('sensor.you_jie_bei_jing_gas95') or '-' }}</b></td>
           </tr>
           <tr>
             <td style="padding:10px 4px;">98# 汽油</td>
-            <td style="padding:10px 4px;color:#60a5fa;"><b>{{ states('sensor.you_jia_bei_jing_gas98') or '-' }}</b></td>
+            <td style="padding:10px 4px;color:#60a5fa;"><b>{{ states('sensor.you_jie_bei_jing_gas98') or '-' }}</b></td>
           </tr>
           <tr style="background:rgba(148,163,184,0.12);">
             <td style="padding:10px 4px;">0# 柴油</td>
-            <td style="padding:10px 4px;color:#4ade80;"><b>{{ states('sensor.you_jia_bei_jing_die0') or '-' }}</b></td>
+            <td style="padding:10px 4px;color:#4ade80;"><b>{{ states('sensor.you_jie_bei_jing_die0') or '-' }}</b></td>
           </tr>
         </table>
       </div>
@@ -36,12 +36,12 @@ cards:
     content: >-
       <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;line-height:1.6;">
         <div style="color:#93c5fd;font-weight:700;margin-bottom:6px;">调价信息</div>
-        <div style="color:#e2e8f0;"><b>下次调价：</b>{{ states('sensor.you_jia_bei_jing_time') or '暂无' }}</div>
-        <div style="color:#fca5a5;margin-top:6px;"><b>趋势提示：</b>{{ states('sensor.you_jia_bei_jing_tips') or '暂无' }}</div>
+        <div style="color:#e2e8f0;"><b>下次调价：</b>{{ states('sensor.you_jie_bei_jing_time') or '暂无' }}</div>
+        <div style="color:#fca5a5;margin-top:6px;"><b>趋势提示：</b>{{ states('sensor.you_jie_bei_jing_tips') or '暂无' }}</div>
       </div>
 
   - type: button
-    entity: button.you_jia_bei_jing_refresh
+    entity: button.you_jie_bei_jing_refresh
     name: 立即更新油价
     icon: mdi:refresh
     show_state: false
@@ -49,5 +49,5 @@ cards:
       action: call-service
       service: button.press
       service_data:
-        entity_id: button.you_jia_bei_jing_refresh
+        entity_id: button.you_jie_bei_jing_refresh
 
