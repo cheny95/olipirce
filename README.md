@@ -24,6 +24,7 @@
 
 <img width="584" height="351" alt="image" src="https://github.com/user-attachments/assets/a92967a9-0186-4b1c-9ae2-cf7474a97584" />
 <img width="981" height="736" alt="image" src="https://github.com/user-attachments/assets/e45ecc58-2e77-4322-b0bd-79528a663ec7" />
+<img width="625" height="597" alt="ac10fd4dc1ae4b9835304c67a00dd81e" src="https://github.com/user-attachments/assets/1449407b-7f44-4812-8297-8f7c0c543d18" />
 
 
 ## 升级说明（重要）
