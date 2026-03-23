@@ -1,9 +1,11 @@
 {
   "domain": "oilprice",
-  "name": "oilprice",
-  "version": "0.0.2",
-  "documentation": "https://github.com/aalavender/OilPrice/blob/master/README.md",
+  "name": "Oil Price",
+  "version": "1.0.0",
+  "documentation": "https://github.com/cheny95/olipirce",
+  "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@aalavender"],
-  "requirements": ["requests", "beautifulsoup4"]
+  "codeowners": ["@cheny95"],
+  "requirements": ["beautifulsoup4"],
+  "iot_class": "cloud_polling"
 }

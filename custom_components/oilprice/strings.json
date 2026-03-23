@@ -1,0 +1,31 @@
+{
+  "title": "Oil Price",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Select region",
+        "description": "Choose the province/region to monitor oil price.",
+        "data": {
+          "region": "Region",
+          "name": "Display name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to oil price service. Please try again later.",
+      "invalid_region": "Selected region is not supported right now.",
+      "unknown": "Unexpected error occurred. Check logs for details."
+    },
+    "abort": {
+      "already_configured": "This region is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "oilprice": {
+        "name": "Oil Price"
+      }
+    }
+  }
+}
+

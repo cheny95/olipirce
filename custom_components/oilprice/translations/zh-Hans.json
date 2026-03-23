@@ -1,0 +1,31 @@
+{
+  "title": "油价",
+  "config": {
+    "step": {
+      "user": {
+        "title": "选择地区",
+        "description": "请选择要监控油价的地区。",
+        "data": {
+          "region": "地区",
+          "name": "显示名称"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接油价服务，请稍后重试。",
+      "invalid_region": "当前地区暂不支持，请重新选择。",
+      "unknown": "出现未知错误，请查看日志。"
+    },
+    "abort": {
+      "already_configured": "该地区已添加，无需重复配置。"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "oilprice": {
+        "name": "油价"
+      }
+    }
+  }
+}
+

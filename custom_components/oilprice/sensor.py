@@ -1,82 +1,112 @@
-"""
-A component which allows you to parse http://www.qiyoujiage.com/zhejiang.shtml get oil price
+"""Sensor platform for the oilprice integration."""
 
-For more details about this component, please refer to the documentation at
-https://github.com/aalavender/OilPrice/
+from __future__ import annotations
 
-"""
-import re
 import logging
-import asyncio
-import voluptuous as vol
-import datetime
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import (PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_REGION)
-from requests import request
-from bs4 import BeautifulSoup
+from typing import Any, Optional
 
-__version__ = '0.1.0'
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_REGION
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator, UpdateFailed
+
+from .api import (
+    OilPriceApiError,
+    OilPriceCannotConnectError,
+    OilPriceInvalidRegionError,
+    async_fetch_oilprice,
+)
+from .const import DEFAULT_NAME, DOMAIN, ICON, SCAN_INTERVAL, region_name
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['requests', 'beautifulsoup4']
-
-COMPONENT_REPO = 'https://github.com/aalavender/OilPrice/'
-SCAN_INTERVAL = datetime.timedelta(hours=8)
-ICON = 'mdi:gas-station'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_REGION): cv.string,
-})
-
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    _LOGGER.info("async_setup_platform sensor oilprice")
-    async_add_devices([OilPriceSensor(name=config[CONF_NAME], region=config[CONF_REGION])],True)
-
-# @asyncio.coroutine
-# def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-#     _LOGGER.info("async_setup_platform sensor oilprice")
-#     async_add_devices([OilPriceSensor(name=config[CONF_NAME], region=config[CONF_REGION])],True)
+_FUEL_ALIAS_MAP = {
+    "92": "gas92",
+    "95": "gas95",
+    "98": "gas98",
+    "0": "die0",
+}
 
 
-class OilPriceSensor(Entity):
-    def __init__(self, name: str, region: str):
-        self._name = name
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up oilprice sensor from config entry."""
+    region = entry.data[CONF_REGION]
+
+    coordinator = OilPriceDataUpdateCoordinator(hass, region)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except UpdateFailed as err:
+        raise ConfigEntryNotReady("Failed to initialize oilprice data") from err
+
+    async_add_entities([OilPriceSensor(entry, coordinator)])
+
+
+class OilPriceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator to manage periodic oilprice updates."""
+
+    def __init__(self, hass: HomeAssistant, region: str) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_{region}",
+            update_interval=SCAN_INTERVAL,
+        )
         self._region = region
-        self._state = None
-        self._entries = {}
 
-    def update(self):
-        _LOGGER.info("sensor oilprice update info from http://www.qiyoujiage.com/")
-        header = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.79 Safari/537.36'
-        }
-        response = request('GET', 'http://www.qiyoujiage.com/' + self._region + '.shtml', headers=header)  # 定义头信息发送请求返回response对象
-        response.encoding = 'utf-8'   #不写这句会乱码
-        soup = BeautifulSoup(response.text, "lxml")
-        dls = soup.select("#youjia > dl")
-        self._state = soup.select("#youjiaCont > div")[1].contents[0].strip()
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch latest oilprice data."""
+        try:
+            return await async_fetch_oilprice(self.hass, self._region)
+        except OilPriceCannotConnectError as err:
+            raise UpdateFailed("Unable to connect to oilprice service") from err
+        except OilPriceInvalidRegionError as err:
+            raise UpdateFailed("Region is invalid or unsupported") from err
+        except OilPriceApiError as err:
+            raise UpdateFailed(str(err)) from err
 
-        for dl in dls:
-            k = re.search("\d+", dl.select('dt')[0].text).group()
-            self._entries[k] = dl.select('dd')[0].text
-        self._entries["update_time"] = datetime.datetime.now().strftime('%Y-%m-%d')
-        self._entries["tips"] = soup.select("#youjiaCont > div:nth-of-type(2) > span")[0].text.strip()  # 油价涨跌信息
 
-    @property
-    def name(self):
-        return self._name
+class OilPriceSensor(CoordinatorEntity[OilPriceDataUpdateCoordinator], SensorEntity):
+    """Representation of a single oilprice sensor."""
 
-    @property
-    def state(self):
-        return self._state
+    _attr_icon = ICON
+    _attr_has_entity_name = False
 
-    @property
-    def icon(self):
-        return ICON
+    def __init__(self, entry: ConfigEntry, coordinator: OilPriceDataUpdateCoordinator) -> None:
+        """Initialize the oilprice sensor entity."""
+        super().__init__(coordinator)
+        region = entry.data[CONF_REGION]
+
+        self._attr_unique_id = f"{entry.entry_id}_{region}"
+        self._attr_name = entry.title or f"{DEFAULT_NAME}-{region_name(region)}"
 
     @property
-    def extra_state_attributes(self):
-        return self._entries
+    def native_value(self) -> Optional[str]:
+        """Return the current sensor value."""
+        data = self.coordinator.data
+        if not data:
+            return None
+        return data.get("state")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional attributes for the sensor."""
+        data = self.coordinator.data
+        if not data:
+            return {}
+
+        attrs = dict(data.get("entries", {}))
+        for raw_key, alias_key in _FUEL_ALIAS_MAP.items():
+            if raw_key in attrs and alias_key not in attrs:
+                attrs[alias_key] = attrs[raw_key]
+
+        attrs["region"] = data.get("region")
+        attrs["region_name"] = data.get("region_name")
+        return attrs

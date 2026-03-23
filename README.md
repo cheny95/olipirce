@@ -14,21 +14,18 @@
 
 ## 使用方法：
 - 安装完毕后重启Home Assistant。
-- 启动完成后，在`/config/configuration.yaml`添加以下内容
+- 打开 **设置 -> 设备与服务 -> 添加集成**
+- 搜索并选择 **油价 (Oil Price)**
+- 在弹窗中选择地区，并填写显示名称（可选）
+- 点击提交后，集成会自动创建油价实体
+- 如果地区重复或网络不可用，界面会给出友好错误提示
 
-```yaml
-sensor:
-  - platform: oilprice
-    name: 油价
-    region: anhui  # 此处为你要获取油价的省份全拼
-```
-- 再次重启 Home Assistant
-- 启动成功后，如无报错，你的油价插件就已安装完成
+> 说明：新版本无需在`configuration.yaml`中配置`platform: oilprice`。
 
 ## 查看是否成功：
 
 - 开发者工具-状态-实体-输入筛选实体
-- 输入刚才你定义的名字『油价』
+- 输入你在集成里设置的显示名称（默认是「油价-地区」）
 - 查看是否有数据，形如：
 <img width="1096" alt="image" src="https://user-images.githubusercontent.com/6293952/191035727-7dfe0de3-2693-48c6-9300-7364d247338a.png">
 
