@@ -1,13 +1,33 @@
 """Constants for the oilprice integration."""
 
-from datetime import timedelta
-
 DOMAIN = "oilprice"
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "button"]
 
-DEFAULT_NAME = "油价"
+CONF_UPDATE_INTERVAL_HOURS = "update_interval_hours"
+DEFAULT_UPDATE_INTERVAL_HOURS = 12
+MIN_UPDATE_INTERVAL_HOURS = 1
+MAX_UPDATE_INTERVAL_HOURS = 168
+
+DEFAULT_REGION = "beijing"
 ICON = "mdi:gas-station"
-SCAN_INTERVAL = timedelta(hours=8)
+
+FUEL_KEY_TO_ATTR = {
+    "92": "gas92",
+    "95": "gas95",
+    "98": "gas98",
+    "0": "die0",
+}
+
+SENSOR_STATE_KEYS = (
+    "gas92",
+    "gas95",
+    "gas98",
+    "die0",
+    "time",
+    "tips",
+    "update_time",
+    "friendly_name",
+)
 
 REGIONS: dict[str, str] = {
     "anhui": "安徽",
@@ -43,7 +63,7 @@ REGIONS: dict[str, str] = {
     "zhejiang": "浙江",
 }
 
-REGION_SELECTOR_OPTIONS: list[dict[str, str]] = [
+REGION_SELECTOR_OPTIONS = [
     {"value": code, "label": f"{name} ({code})"} for code, name in REGIONS.items()
 ]
 
@@ -51,4 +71,3 @@ REGION_SELECTOR_OPTIONS: list[dict[str, str]] = [
 def region_name(region: str) -> str:
     """Return a friendly region name."""
     return REGIONS.get(region, region)
-

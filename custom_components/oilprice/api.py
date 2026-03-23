@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 import re
-from typing import Any
+from typing import Any, Optional, Tuple
 
 from aiohttp import ClientError
 from bs4 import BeautifulSoup
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
-from .const import region_name
-
-_LOGGER = logging.getLogger(__name__)
+from .const import FUEL_KEY_TO_ATTR, region_name
 
 _BASE_URL = "http://www.qiyoujiage.com/{region}.shtml"
 _HEADERS = {
@@ -41,24 +38,24 @@ async def async_fetch_oilprice(hass, region: str) -> dict[str, Any]:
     session = async_get_clientsession(hass)
 
     try:
-        response = await session.get(_BASE_URL.format(region=region), headers=_HEADERS)
+        async with session.get(_BASE_URL.format(region=region), headers=_HEADERS) as response:
+            if response.status >= 400:
+                raise OilPriceCannotConnectError
+            text = await response.text(encoding="utf-8", errors="ignore")
     except ClientError as err:
         raise OilPriceCannotConnectError from err
 
-    if response.status >= 400:
-        raise OilPriceCannotConnectError
-
-    text = await response.text(encoding="utf-8", errors="ignore")
     soup = BeautifulSoup(text, "html.parser")
-
-    fuel_blocks = soup.select("#youjia > dl")
-    if not fuel_blocks:
+    price_blocks = soup.select("#youjia > dl")
+    if not price_blocks:
         raise OilPriceInvalidRegionError
 
-    price_text = _extract_price_text(soup)
-    entries: dict[str, str] = {}
+    gas92 = None
+    gas95 = None
+    gas98 = None
+    die0 = None
 
-    for block in fuel_blocks:
+    for block in price_blocks:
         title = block.select_one("dt")
         value = block.select_one("dd")
         if title is None or value is None:
@@ -68,27 +65,57 @@ async def async_fetch_oilprice(hass, region: str) -> dict[str, Any]:
         if match is None:
             continue
 
-        entries[match.group(0)] = value.get_text(strip=True)
+        fuel_no = match.group(0)
+        fuel_value = value.get_text(strip=True)
+        attr_name = FUEL_KEY_TO_ATTR.get(fuel_no)
+        if attr_name == "gas92":
+            gas92 = fuel_value
+        elif attr_name == "gas95":
+            gas95 = fuel_value
+        elif attr_name == "gas98":
+            gas98 = fuel_value
+        elif attr_name == "die0":
+            die0 = fuel_value
 
-    tip = soup.select_one("#youjiaCont > div:nth-of-type(2) > span")
-    if tip is not None:
-        entries["tips"] = tip.get_text(strip=True)
+    time_text, tips_text = _extract_notice_fields(soup)
 
-    entries["update_time"] = dt_util.now().strftime("%Y-%m-%d %H:%M:%S")
+    update_time = dt_util.now().strftime("%Y-%m-%d %H:%M:%S")
+    state = gas92 or time_text or "unknown"
 
     return {
-        "state": price_text,
-        "entries": entries,
+        "state": state,
+        "gas92": gas92,
+        "gas95": gas95,
+        "gas98": gas98,
+        "die0": die0,
+        "time": time_text,
+        "tips": tips_text,
+        "update_time": update_time,
         "region": region,
         "region_name": region_name(region),
     }
 
 
-def _extract_price_text(soup: BeautifulSoup) -> str:
-    info_blocks = soup.select("#youjiaCont > div")
-    if len(info_blocks) > 1:
-        text = info_blocks[1].get_text(strip=True)
-        if text:
-            return text
-    return "油价信息已更新"
+def _extract_notice_fields(soup: BeautifulSoup) -> Tuple[Optional[str], Optional[str]]:
+    """Extract notice time and tips from the block after #youjia."""
+    notice_block = soup.select_one("#youjiaCont > div:nth-of-type(2)")
+    if notice_block is None:
+        return None, None
 
+    text_parts = [part.strip() for part in notice_block.stripped_strings if part.strip()]
+    if not text_parts:
+        return None, None
+
+    time_text = next((text for text in text_parts if "下次油价" in text), text_parts[0])
+
+    tip_text = None
+    span = notice_block.select_one("span")
+    if span is not None:
+        span_text = span.get_text(strip=True)
+        if span_text:
+            tip_text = span_text
+
+    if tip_text is None:
+        tip_text = next((text for text in text_parts if "预计" in text or "油价" in text), None)
+
+    return time_text, tip_text
