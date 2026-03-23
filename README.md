@@ -22,6 +22,10 @@
 - 如果地区重复或网络不可用，界面会给出友好错误提示
 - 会额外创建一个“立即更新”按钮实体，点击后会立刻拉取最新油价
 
+<img width="584" height="351" alt="image" src="https://github.com/user-attachments/assets/a92967a9-0186-4b1c-9ae2-cf7474a97584" />
+<img width="981" height="736" alt="image" src="https://github.com/user-attachments/assets/e45ecc58-2e77-4322-b0bd-79528a663ec7" />
+
+
 ## 升级说明（重要）
 
 - 本次升级已从“单实体 + 多属性”模式升级为“多实体状态”模式。
@@ -54,12 +58,11 @@
 ## 查看是否成功：
 
 - 开发者工具-状态-实体-输入筛选实体
-- 输入 `you_jia` 关键字进行筛选
+- 输入 `油价` 关键字进行筛选
 - 确认已生成多个独立实体（如 `sensor.you_jia_bei_jing_gas92`）
 - 点击 `button.you_jia_bei_jing_refresh` 可立即刷新油价
 - 查看是否有数据，形如：
-<img width="1096" alt="image" src="https://user-images.githubusercontent.com/6293952/191035727-7dfe0de3-2693-48c6-9300-7364d247338a.png">
-
+<img width="1267" height="918" alt="image" src="https://github.com/user-attachments/assets/6a9f1f20-1ee9-40f3-982b-3c2e0c7b699b" />
 
 ## 面板调用：
 
