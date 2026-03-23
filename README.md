@@ -22,6 +22,28 @@
 - 如果地区重复或网络不可用，界面会给出友好错误提示
 - 会额外创建一个“立即更新”按钮实体，点击后会立刻拉取最新油价
 
+## 升级说明（重要）
+
+- 本次升级已从“单实体 + 多属性”模式升级为“多实体状态”模式。
+- 旧命名 `you_jie` 已统一迁移为 `you_jia`。
+- 升级后会自动执行：
+  - 旧实体重命名（`you_jie -> you_jia`）
+  - 旧单实体自动清理
+  - 新按钮命名规范化
+- 如升级后仍看到旧实体，请重启 Home Assistant 或重载一次本集成。
+
+### 新实体模型（示例：北京）
+
+- `sensor.you_jia_bei_jing_gas92`
+- `sensor.you_jia_bei_jing_gas95`
+- `sensor.you_jia_bei_jing_gas98`
+- `sensor.you_jia_bei_jing_die0`
+- `sensor.you_jia_bei_jing_time`
+- `sensor.you_jia_bei_jing_tips`
+- `sensor.you_jia_bei_jing_update_time`
+- `sensor.you_jia_bei_jing_friendly_name`
+- `button.you_jia_bei_jing_refresh`
+
 ### 修改更新周期
 
 - 进入 **设置 -> 设备与服务 -> 油价 -> 配置**
@@ -32,8 +54,9 @@
 ## 查看是否成功：
 
 - 开发者工具-状态-实体-输入筛选实体
-- 输入实体名（默认是「油价-地区」）
-- 点击实体可查看属性：`gas92`、`gas95`、`gas98`、`die0`、`time`、`tips`、`update_time`、`region`、`region_name`
+- 输入 `you_jia` 关键字进行筛选
+- 确认已生成多个独立实体（如 `sensor.you_jia_bei_jing_gas92`）
+- 点击 `button.you_jia_bei_jing_refresh` 可立即刷新油价
 - 查看是否有数据，形如：
 <img width="1096" alt="image" src="https://user-images.githubusercontent.com/6293952/191035727-7dfe0de3-2693-48c6-9300-7364d247338a.png">
 
@@ -46,11 +69,11 @@
    - 亮色版：`油价卡片模板.yaml`
    - 深色版：`油价卡片模板-深色.yaml`
 4. 把模板中的实体替换为你自己的实体（重点改这两个）：
-   - `sensor.you_jia_beijing`
-   - `button.you_jia_refresh_beijing`
+   - `sensor.you_jia_bei_jing_gas92`（及同地区的其它 `sensor.you_jia_bei_jing_*`）
+   - `button.you_jia_bei_jing_refresh`
 5. 保存卡片后返回概览，即可查看油价并点击“立即更新”。
 
-> 提示：如果你添加的是其他地区，只需要把 `beijing` 改成对应地区代码即可。
+> 提示：如果你添加的是其他地区，只需要把实体中的 `bei_jing` 替换为对应地区 slug。
 
 ## 交流
 - QQ群：198841186
