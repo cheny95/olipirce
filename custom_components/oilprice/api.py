@@ -49,11 +49,7 @@ async def async_fetch_oilprice(hass, region: str) -> dict[str, Any]:
     soup = BeautifulSoup(text, "html.parser")
     normalized_text = _normalize_text(soup.get_text("\n", strip=True))
 
-    table_prices = (
-        _extract_sichuan_prices_from_table(soup)
-        if region == "sichuan"
-        else _extract_prices_from_tables(soup)
-    )
+    table_prices = _extract_prices_from_tables(soup)
     parsed_prices = _extract_prices_by_section(normalized_text)
     gas92 = _pick_price(table_prices.get("gas92"), parsed_prices.get("gas92"))
     gas95 = _pick_price(table_prices.get("gas95"), parsed_prices.get("gas95"))
@@ -145,6 +141,13 @@ def _extract_prices_from_tables(soup: BeautifulSoup) -> dict[str, Optional[str]]
     values = {"gas92": None, "gas95": None, "gas98": None, "die0": None}
 
     for table in soup.select("table.bx"):
+        first_row_prices = _extract_first_row_prices_from_region_table(table)
+        if any(first_row_prices.values()):
+            for key, value in first_row_prices.items():
+                if values[key] is None and value is not None:
+                    values[key] = value
+            continue
+
         header_cells = table.select("tbody tr:nth-of-type(1) th, tbody tr:nth-of-type(1) td")
         value_cells = table.select("tbody tr:nth-of-type(2) td, tbody tr:nth-of-type(2) th")
         if not header_cells or not value_cells:
@@ -170,33 +173,50 @@ def _extract_prices_from_tables(soup: BeautifulSoup) -> dict[str, Optional[str]]
     return values
 
 
-def _extract_sichuan_prices_from_table(soup: BeautifulSoup) -> dict[str, Optional[str]]:
-    """Extract prices from Sichuan multi-city table, using only 四川油价 row."""
+def _extract_first_row_prices_from_region_table(table) -> dict[str, Optional[str]]:
+    """Extract prices from multi-city table, taking only the first data row."""
     values = {"gas92": None, "gas95": None, "gas98": None, "die0": None}
 
-    for table in soup.select("table.bx"):
-        for row in table.select("tbody tr"):
-            cells = row.select("td, th")
-            if len(cells) < 5:
-                continue
+    rows = table.select("tbody tr")
+    if len(rows) < 3:
+        return values
 
-            region_text = _normalize_text(cells[0].get_text(" ", strip=True))
-            if "四川油价" not in region_text:
-                continue
+    header_row_index: Optional[int] = None
+    for index, row in enumerate(rows):
+        cells = row.select("td, th")
+        if not cells:
+            continue
+        header_texts = [_normalize_text(cell.get_text(" ", strip=True)) for cell in cells]
+        has_region_col = any("地区" in text for text in header_texts)
+        has_price_col = any("92" in text and "汽油" in text for text in header_texts)
+        if has_region_col and has_price_col:
+            header_row_index = index
+            break
 
-            values["gas92"] = _normalize_price_value(
-                _normalize_text(cells[1].get_text(" ", strip=True))
-            )
-            values["gas95"] = _normalize_price_value(
-                _normalize_text(cells[2].get_text(" ", strip=True))
-            )
-            values["gas98"] = _normalize_price_value(
-                _normalize_text(cells[3].get_text(" ", strip=True))
-            )
-            values["die0"] = _normalize_price_value(
-                _normalize_text(cells[4].get_text(" ", strip=True))
-            )
-            return values
+    if header_row_index is None or header_row_index + 1 >= len(rows):
+        return values
+
+    header_cells = rows[header_row_index].select("td, th")
+    first_data_cells = rows[header_row_index + 1].select("td, th")
+    if not header_cells or not first_data_cells:
+        return values
+
+    for index, header_cell in enumerate(header_cells):
+        if index >= len(first_data_cells):
+            continue
+
+        header_text = _normalize_text(header_cell.get_text(" ", strip=True))
+        value_text = _normalize_text(first_data_cells[index].get_text(" ", strip=True))
+        value = _normalize_price_value(value_text)
+
+        if "92" in header_text and "汽油" in header_text:
+            values["gas92"] = value
+        elif "95" in header_text and "汽油" in header_text:
+            values["gas95"] = value
+        elif "98" in header_text and "汽油" in header_text:
+            values["gas98"] = value
+        elif header_text.startswith("0") and "柴油" in header_text:
+            values["die0"] = value
 
     return values
 
