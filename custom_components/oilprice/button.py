@@ -54,7 +54,7 @@ class OilPriceRefreshButton(CoordinatorEntity[OilPriceDataUpdateCoordinator], Bu
         return DeviceInfo(
             identifiers={(DOMAIN, self._region)},
             name=f"油价-{self._region_name}",
-            manufacturer="qiyoujiage.com",
+            manufacturer="Chan",
             model="Oil Price",
         )
 
