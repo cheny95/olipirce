@@ -168,6 +168,41 @@ TABLE_HTML = """
 </div>
 """
 
+SICHUAN_HTML = """
+<div>
+  <table class="bx" width="100%" cellspacing="0" cellpadding="0" border="1" align="center">
+      <tbody>
+          <tr>
+              <td colspan="5"><strong>四川</strong><strong>今日油价查询（元/升）</strong></td>
+          </tr>
+          <tr>
+              <td>地区</td>
+              <td>92号汽油</td>
+              <td>95号汽油</td>
+              <td>98号汽油</td>
+              <td>0号柴油</td>
+          </tr>
+          <tr>
+              <td><a href="http://www.huangjinjiage.cn/oil/sichuan.html">四川油价</a></td>
+              <td>8.66</td>
+              <td>9.25</td>
+              <td>10.56</td>
+              <td>8.29</td>
+          </tr>
+          <tr>
+              <td><a href="http://www.huangjinjiage.cn/oil/chengdu.html">成都油价</a></td>
+              <td>8.66</td>
+              <td>9.25</td>
+              <td>10.56</td>
+              <td>8.29</td>
+          </tr>
+      </tbody>
+  </table>
+  <div>油价下次调价时间为2026年4月7日 24:00</div>
+  <div>2026年3月24日今日油价最新消息：国际油价上涨。</div>
+</div>
+"""
+
 
 class _FakeResponse:
     def __init__(self, status: int, text: str) -> None:
@@ -249,6 +284,17 @@ class ApiFetchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data["gas95"], "9.12")
         self.assertEqual(data["gas98"], "10.62")
         self.assertEqual(data["die0"], "8.31")
+
+    async def test_fetch_oilprice_sichuan_row_layout_success(self) -> None:
+        session = _FakeSession(response=_FakeResponse(status=200, text=SICHUAN_HTML))
+
+        with patch("custom_components.oilprice.api.async_get_clientsession", return_value=session):
+            data = await api.async_fetch_oilprice(hass=object(), region="sichuan")
+
+        self.assertEqual(data["gas92"], "8.66")
+        self.assertEqual(data["gas95"], "9.25")
+        self.assertEqual(data["gas98"], "10.56")
+        self.assertEqual(data["die0"], "8.29")
 
 
 if __name__ == "__main__":

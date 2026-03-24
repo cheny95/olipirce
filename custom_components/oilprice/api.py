@@ -49,7 +49,11 @@ async def async_fetch_oilprice(hass, region: str) -> dict[str, Any]:
     soup = BeautifulSoup(text, "html.parser")
     normalized_text = _normalize_text(soup.get_text("\n", strip=True))
 
-    table_prices = _extract_prices_from_tables(soup)
+    table_prices = (
+        _extract_sichuan_prices_from_table(soup)
+        if region == "sichuan"
+        else _extract_prices_from_tables(soup)
+    )
     parsed_prices = _extract_prices_by_section(normalized_text)
     gas92 = _pick_price(table_prices.get("gas92"), parsed_prices.get("gas92"))
     gas95 = _pick_price(table_prices.get("gas95"), parsed_prices.get("gas95"))
@@ -166,6 +170,37 @@ def _extract_prices_from_tables(soup: BeautifulSoup) -> dict[str, Optional[str]]
     return values
 
 
+def _extract_sichuan_prices_from_table(soup: BeautifulSoup) -> dict[str, Optional[str]]:
+    """Extract prices from Sichuan multi-city table, using only 四川油价 row."""
+    values = {"gas92": None, "gas95": None, "gas98": None, "die0": None}
+
+    for table in soup.select("table.bx"):
+        for row in table.select("tbody tr"):
+            cells = row.select("td, th")
+            if len(cells) < 5:
+                continue
+
+            region_text = _normalize_text(cells[0].get_text(" ", strip=True))
+            if "四川油价" not in region_text:
+                continue
+
+            values["gas92"] = _normalize_price_value(
+                _normalize_text(cells[1].get_text(" ", strip=True))
+            )
+            values["gas95"] = _normalize_price_value(
+                _normalize_text(cells[2].get_text(" ", strip=True))
+            )
+            values["gas98"] = _normalize_price_value(
+                _normalize_text(cells[3].get_text(" ", strip=True))
+            )
+            values["die0"] = _normalize_price_value(
+                _normalize_text(cells[4].get_text(" ", strip=True))
+            )
+            return values
+
+    return values
+
+
 def _extract_price_tokens(text: str) -> list[str]:
     """Return ordered price-like tokens (decimal or standalone dash)."""
     return re.findall(r"\d+\.\d+|(?<!\d)-(?=\s|$)", text)
@@ -179,6 +214,8 @@ def _none_if_dash(value: str) -> Optional[str]:
 def _normalize_price_value(value: str) -> Optional[str]:
     """Normalize table price cell value."""
     if not value or value == "-":
+        return None
+    if re.fullmatch(r"\d+\.\d+", value) is None:
         return None
     return value
 
