@@ -7,10 +7,10 @@
 
 > 以下两种方法任选其一！
 
-#### 方法1: [HACS (**点击这里安装**)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cheny95&repository=olipirce&category=integration)
+#### 方法1: [HACS (**点击这里安装**)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cheny95&repository=oilprice-for-homeassistant&category=integration)
 
 #### 方法2: 通过 Samba / SFTP 手动安装
-> [下载](https://github.com/cheny95/olipirce/archive/main.zip)解压并复制`custom_components/oilprice`文件夹到HA配置目录下的`custom_components`文件夹
+> [下载](https://github.com/cheny95/oilprice-for-homeassistant/archive/main.zip)解压并复制`custom_components/oilprice`文件夹到HA配置目录下的`custom_components`文件夹
 
 ## 使用方法：
 - 安装完毕后重启Home Assistant。

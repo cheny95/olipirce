@@ -320,7 +320,7 @@ class ApiFetchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data["gas98"], "10.62")
         self.assertEqual(data["die0"], "8.31")
 
-    async def test_fetch_oilprice_sichuan_row_layout_success(self) -> None:
+    async def test_fetch_oilprice_region_table_uses_first_row(self) -> None:
         session = _FakeSession(response=_FakeResponse(status=200, text=SICHUAN_HTML))
 
         with patch("custom_components.oilprice.api.async_get_clientsession", return_value=session):

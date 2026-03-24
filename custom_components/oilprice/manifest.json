@@ -2,7 +2,7 @@
   "domain": "oilprice",
   "name": "Oil Price",
   "version": "1.0.1",
-  "documentation": "https://github.com/cheny95/olipirce",
+  "documentation": "https://github.com/cheny95/oilprice",
   "config_flow": true,
   "dependencies": [],
   "codeowners": ["@cheny95"],

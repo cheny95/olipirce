@@ -137,13 +137,13 @@ def _extract_prices_by_section(page_text: str) -> dict[str, Optional[str]]:
 
 
 def _extract_prices_from_tables(soup: BeautifulSoup) -> dict[str, Optional[str]]:
-    """Extract prices from table.bx layout by matching header columns."""
+    """Extract prices from table.bx layout by reading the first data row after headers."""
     values = {"gas92": None, "gas95": None, "gas98": None, "die0": None}
 
     for table in soup.select("table.bx"):
-        first_row_prices = _extract_first_row_prices_from_region_table(table)
-        if any(first_row_prices.values()):
-            for key, value in first_row_prices.items():
+        table_prices = _extract_prices_from_table_first_data_row(table)
+        if any(table_prices.values()):
+            for key, value in table_prices.items():
                 if values[key] is None and value is not None:
                     values[key] = value
             continue
@@ -173,50 +173,68 @@ def _extract_prices_from_tables(soup: BeautifulSoup) -> dict[str, Optional[str]]
     return values
 
 
-def _extract_first_row_prices_from_region_table(table) -> dict[str, Optional[str]]:
-    """Extract prices from multi-city table, taking only the first data row."""
+def _extract_prices_from_table_first_data_row(table) -> dict[str, Optional[str]]:
+    """Extract prices from the first data row after a matching header row."""
     values = {"gas92": None, "gas95": None, "gas98": None, "die0": None}
 
     rows = table.select("tbody tr")
-    if len(rows) < 3:
+    if len(rows) < 2:
         return values
 
-    header_row_index: Optional[int] = None
-    for index, row in enumerate(rows):
+    for header_row_index, row in enumerate(rows[:-1]):
         cells = row.select("td, th")
         if not cells:
             continue
+
         header_texts = [_normalize_text(cell.get_text(" ", strip=True)) for cell in cells]
-        has_region_col = any("地区" in text for text in header_texts)
-        has_price_col = any("92" in text and "汽油" in text for text in header_texts)
-        if has_region_col and has_price_col:
-            header_row_index = index
-            break
-
-    if header_row_index is None or header_row_index + 1 >= len(rows):
-        return values
-
-    header_cells = rows[header_row_index].select("td, th")
-    first_data_cells = rows[header_row_index + 1].select("td, th")
-    if not header_cells or not first_data_cells:
-        return values
-
-    for index, header_cell in enumerate(header_cells):
-        if index >= len(first_data_cells):
+        has_target_header = any(
+            ("92" in text and "汽油" in text)
+            or ("95" in text and "汽油" in text)
+            or ("98" in text and "汽油" in text)
+            or (text.startswith("0") and "柴油" in text)
+            for text in header_texts
+        )
+        if not has_target_header:
             continue
 
-        header_text = _normalize_text(header_cell.get_text(" ", strip=True))
-        value_text = _normalize_text(first_data_cells[index].get_text(" ", strip=True))
-        value = _normalize_price_value(value_text)
+        header_cells = rows[header_row_index].select("td, th")
 
-        if "92" in header_text and "汽油" in header_text:
-            values["gas92"] = value
-        elif "95" in header_text and "汽油" in header_text:
-            values["gas95"] = value
-        elif "98" in header_text and "汽油" in header_text:
-            values["gas98"] = value
-        elif header_text.startswith("0") and "柴油" in header_text:
-            values["die0"] = value
+        # Find the first non-empty data-like row below the matched header row.
+        first_data_cells = []
+        for candidate_row in rows[header_row_index + 1 :]:
+            candidate_cells = candidate_row.select("td, th")
+            if not candidate_cells:
+                continue
+
+            candidate_texts = [
+                _normalize_text(cell.get_text(" ", strip=True)) for cell in candidate_cells
+            ]
+            if any(_normalize_price_value(text) is not None for text in candidate_texts):
+                first_data_cells = candidate_cells
+                break
+
+        if not first_data_cells:
+            continue
+
+        for index, header_cell in enumerate(header_cells):
+            if index >= len(first_data_cells):
+                continue
+
+            header_text = _normalize_text(header_cell.get_text(" ", strip=True))
+            value_text = _normalize_text(first_data_cells[index].get_text(" ", strip=True))
+            value = _normalize_price_value(value_text)
+
+            if "92" in header_text and "汽油" in header_text:
+                values["gas92"] = value
+            elif "95" in header_text and "汽油" in header_text:
+                values["gas95"] = value
+            elif "98" in header_text and "汽油" in header_text:
+                values["gas98"] = value
+            elif header_text.startswith("0") and "柴油" in header_text:
+                values["die0"] = value
+
+        if any(values.values()):
+            break
 
     return values
 
