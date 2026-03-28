@@ -54,7 +54,7 @@ REGIONS: dict[str, str] = {
     "shandong": "山东",
     "shanghai": "上海",
     "shanxi": "山西",
-    "shan-xi": "陕西",
+    "shanxisheng": "陕西",
     "sichuan": "四川",
     "tianjin": "天津",
     "xinjiang": "新疆",
