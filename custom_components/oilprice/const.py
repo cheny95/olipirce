@@ -25,6 +25,8 @@ SENSOR_STATE_KEYS = (
     "die0",
     "time",
     "tips",
+    "trend",
+    "next_adjust_date",
     "update_time",
     "friendly_name",
 )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timedelta
 from typing import Any, Optional, Tuple
 
 from aiohttp import ClientError
@@ -57,6 +58,8 @@ async def async_fetch_oilprice(hass, region: str) -> dict[str, Any]:
     die0 = _pick_price(table_prices.get("die0"), parsed_prices.get("die0"))
 
     time_text, tips_text = _extract_notice_fields(soup, normalized_text)
+    trend_text = _extract_trend_text(tips_text)
+    next_adjust_date = _extract_next_adjust_date_text(time_text)
 
     if not any([gas92, gas95, gas98, die0, time_text, tips_text]):
         raise OilPriceInvalidRegionError
@@ -72,6 +75,8 @@ async def async_fetch_oilprice(hass, region: str) -> dict[str, Any]:
         "die0": die0,
         "time": time_text,
         "tips": tips_text,
+        "trend": trend_text,
+        "next_adjust_date": next_adjust_date,
         "update_time": update_time,
         "region": region,
         "region_name": region_name(region),
@@ -287,5 +292,62 @@ def _extract_tips_text(page_lines: list[str]) -> Optional[str]:
             return line
 
     return None
+
+
+def _extract_trend_text(tips_text: Optional[str]) -> Optional[str]:
+    """Extract a compact trend text from tips."""
+    if not tips_text:
+        return None
+
+    if any(token in tips_text for token in ("下调", "下跌", "下降")):
+        return "下调"
+    if any(token in tips_text for token in ("搁浅", "不作调整", "不做调整", "维持")):
+        return "搁浅"
+    if any(token in tips_text for token in ("上调", "上涨", "上升")):
+        return "上涨"
+    return None
+
+
+def _extract_next_adjust_date_text(time_text: Optional[str]) -> Optional[str]:
+    """Extract concise next adjustment date text from the full time sentence."""
+    if not time_text:
+        return None
+
+    match = re.search(
+        r"(\d{4}年\d{1,2}月\d{1,2}日)\s*(?:([0-2]?\d)[:：](\d{2})|([0-2]?\d)点)?",
+        time_text,
+    )
+    if match is None:
+        return None
+
+    date_part = match.group(1)
+    hour_minute_hour = match.group(2)
+    hour_minute_minute = match.group(3)
+    hour_dot = match.group(4)
+
+    if hour_minute_hour is not None:
+        hour_text = hour_minute_hour
+        minute_text = hour_minute_minute or "00"
+    else:
+        hour_text = hour_dot or "0"
+        minute_text = "00"
+
+    date_match = re.fullmatch(r"(\d{4})年(\d{1,2})月(\d{1,2})日", date_part)
+    if date_match is None:
+        return None
+    year = int(date_match.group(1))
+    month = int(date_match.group(2))
+    day = int(date_match.group(3))
+
+    if hour_text == "24" and minute_text == "00":
+        date_obj = datetime(year, month, day) + timedelta(days=1)
+        year, month, day = date_obj.year, date_obj.month, date_obj.day
+        hour_text = "0"
+
+    date_part = f"{year}年{month}月{day}日"
+
+    if minute_text == "00":
+        return f"{date_part}{int(hour_text)}点"
+    return f"{date_part}{int(hour_text)}:{minute_text}"
 
 

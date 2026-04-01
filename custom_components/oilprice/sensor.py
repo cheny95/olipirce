@@ -23,6 +23,8 @@ _ENTITY_META: dict[str, tuple[str, str]] = {
     "die0": ("0#柴油", "mdi:gas-station"),
     "time": ("下次调价", "mdi:clock-outline"),
     "tips": ("调价提示", "mdi:bullhorn-outline"),
+    "trend": ("趋势", "mdi:trending-up"),
+    "next_adjust_date": ("调价日期", "mdi:calendar-clock"),
     "update_time": ("更新时间", "mdi:update"),
     "friendly_name": ("地区名称", "mdi:map-marker"),
 }

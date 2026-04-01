@@ -284,6 +284,8 @@ class ApiFetchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data["die0"], "8.30")
         self.assertEqual(data["time"], "油价下次调价时间为2026年4月7日 24:00")
         self.assertIn("今日油价最新消息", data["tips"])
+        self.assertEqual(data["trend"], "上涨")
+        self.assertEqual(data["next_adjust_date"], "2026年4月8日0点")
         self.assertEqual(data["update_time"], "2026-03-24 16:32:05")
         self.assertEqual(data["region_name"], "安徽")
 
@@ -341,6 +343,29 @@ class ApiFetchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data["gas95"], "9.12")
         self.assertEqual(data["gas98"], "10.62")
         self.assertEqual(data["die0"], "8.31")
+
+
+class ApiParserTests(unittest.TestCase):
+    def test_extract_trend_text(self) -> None:
+        self.assertEqual(api._extract_trend_text("预计油价上涨0.5元/升"), "上涨")
+        self.assertEqual(api._extract_trend_text("预计油价下调200元/吨"), "下调")
+        self.assertEqual(api._extract_trend_text("本轮调价或将搁浅"), "搁浅")
+        self.assertIsNone(api._extract_trend_text("无明确趋势"))
+
+    def test_extract_next_adjust_date_text(self) -> None:
+        self.assertEqual(
+            api._extract_next_adjust_date_text("油价下次调价时间为2026年4月7日 24:00"),
+            "2026年4月8日0点",
+        )
+        self.assertEqual(
+            api._extract_next_adjust_date_text("下次国内成品油价调整窗口时间为2026年4月8日0点"),
+            "2026年4月8日0点",
+        )
+        self.assertEqual(
+            api._extract_next_adjust_date_text("油价下次调价时间为2026年4月9日 09:30"),
+            "2026年4月9日9:30",
+        )
+        self.assertIsNone(api._extract_next_adjust_date_text("无日期"))
 
 
 if __name__ == "__main__":
