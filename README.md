@@ -21,9 +21,12 @@
 - 点击提交后，集成会自动创建油价实体
 - 如果地区重复或网络不可用，界面会给出友好错误提示
 - 会额外创建一个“立即更新”按钮实体，点击后会立刻拉取最新油价
+<img width="988" height="760" alt="image" src="https://github.com/user-attachments/assets/c2a68f8a-4a4a-4408-97c3-dc2cc1ef14c9" />
 
-<img width="584" height="351" alt="image" src="https://github.com/user-attachments/assets/a92967a9-0186-4b1c-9ae2-cf7474a97584" />
-<img width="981" height="736" alt="image" src="https://github.com/user-attachments/assets/e45ecc58-2e77-4322-b0bd-79528a663ec7" />
+<img width="1474" height="928" alt="image" src="https://github.com/user-attachments/assets/cf70aa38-4765-4cec-a313-8df5b2d41bde" />
+
+<img width="1469" height="959" alt="image" src="https://github.com/user-attachments/assets/ba681067-516b-4596-a941-e98d65384042" />
+
 <img width="625" height="597" alt="ac10fd4dc1ae4b9835304c67a00dd81e" src="https://github.com/user-attachments/assets/1449407b-7f44-4812-8297-8f7c0c543d18" />
 
 
