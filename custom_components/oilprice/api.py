@@ -295,15 +295,56 @@ def _extract_tips_text(page_lines: list[str]) -> Optional[str]:
 
 
 def _extract_trend_text(tips_text: Optional[str]) -> Optional[str]:
-    """Extract a compact trend text from tips."""
+    """Extract adjustment trend from the forecast segment in tips text."""
     if not tips_text:
         return None
 
-    if any(token in tips_text for token in ("下调", "下跌", "下降")):
+    normalized = _normalize_text(tips_text)
+
+    # Highest priority: extract from the pricing-cycle forecast segment.
+    cycle_match = re.search(
+        r"新一轮\d+个工作日统计周期[^。；]{0,120}(?:预计|预期|预测)[^。；]{0,20}油价[^。；，]{0,30}(上涨|上调|上升|下调|下跌|下降|搁浅|不作调整|不做调整|维持)",
+        normalized,
+    )
+    if cycle_match is not None:
+        trend = _normalize_trend_token(cycle_match.group(1))
+        if trend is not None:
+            return trend
+
+    # Prefer the explicit forecast wording (e.g. "预计油价上涨...") to avoid
+    # being misled by unrelated "国际油价上涨/下跌" context.
+    forecast_patterns = (
+        r"(?:预计|预期|预测)[^。；，]{0,20}油价[^。；，]{0,30}(上涨|上调|上升|下调|下跌|下降|搁浅|不作调整|不做调整|维持)",
+    )
+    for pattern in forecast_patterns:
+        match = re.search(pattern, normalized)
+        if match is not None:
+            trend = _normalize_trend_token(match.group(1))
+            if trend is not None:
+                return trend
+
+    # Conservative fallback: only parse when adjustment keywords lead the trend term.
+    fallback_patterns = (
+        r"调价[^。；，]{0,30}(上涨|上调|上升|下调|下跌|下降|搁浅|不作调整|不做调整|维持)",
+        r"窗口时间[^。；，]{0,30}(上涨|上调|上升|下调|下跌|下降|搁浅|不作调整|不做调整|维持)",
+    )
+    for pattern in fallback_patterns:
+        match = re.search(pattern, normalized)
+        if match is not None:
+            trend = _normalize_trend_token(match.group(1))
+            if trend is not None:
+                return trend
+
+    return None
+
+
+def _normalize_trend_token(token: str) -> Optional[str]:
+    """Normalize trend wording to canonical values."""
+    if token in ("下调", "下跌", "下降"):
         return "下调"
-    if any(token in tips_text for token in ("搁浅", "不作调整", "不做调整", "维持")):
+    if token in ("搁浅", "不作调整", "不做调整", "维持"):
         return "搁浅"
-    if any(token in tips_text for token in ("上调", "上涨", "上升")):
+    if token in ("上调", "上涨", "上升"):
         return "上涨"
     return None
 

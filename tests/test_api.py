@@ -114,7 +114,7 @@ SAMPLE_HTML = """
 </div>
 <div>
   安徽油价调整最新消息
-  2026年3月24日今日油价最新消息：国际油价上涨，美国原油价格上涨3.1%到90.89美元/桶。
+  2026年3月24日今日油价最新消息：国际油价上涨，美国原油价格上涨3.1%到90.89美元/桶，新一轮10个工作日统计周期，经过10个工作日统计，预计油价上涨2205元/吨。
 </div>
 """
 
@@ -350,6 +350,30 @@ class ApiParserTests(unittest.TestCase):
         self.assertEqual(api._extract_trend_text("预计油价上涨0.5元/升"), "上涨")
         self.assertEqual(api._extract_trend_text("预计油价下调200元/吨"), "下调")
         self.assertEqual(api._extract_trend_text("本轮调价或将搁浅"), "搁浅")
+        self.assertEqual(
+            api._extract_trend_text(
+                "今日油价最新消息：国际油价下跌。新一轮10个工作日统计周期，经过7个工作日统计，预计油价上涨190元/吨，即油价上涨0.14元/升-0.17元/升。"
+            ),
+            "上涨",
+        )
+        self.assertIsNone(
+            api._extract_trend_text(
+                "今日油价最新消息：新一轮10个工作日统计周期，国际油价下跌，但暂无预计油价方向。"
+            )
+        )
+        self.assertEqual(
+            api._extract_trend_text(
+                "2026年4月2日今日油价最新消息：国际油价下跌，美国原油价格下跌1.46%到98.66美元/桶，"
+                "布伦特原油价格下跌2.85%到100.31美元/桶，新一轮10个工作日统计周期，经过7个工作日统计，"
+                "预计油价上涨190元/吨，即油价上涨0.14元/升-0.17元/升，下次国内成品油价调整窗口时间为2026年4月7日24时。"
+            ),
+            "上涨",
+        )
+        self.assertIsNone(
+            api._extract_trend_text(
+                "2026年4月2日今日油价最新消息：国际油价下跌，美国原油价格下跌1.46%到98.66美元/桶，布伦特原油价格下跌2.85%。"
+            )
+        )
         self.assertIsNone(api._extract_trend_text("无明确趋势"))
 
     def test_extract_next_adjust_date_text(self) -> None:
