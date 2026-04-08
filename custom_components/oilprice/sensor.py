@@ -80,6 +80,9 @@ class OilPriceFieldSensor(CoordinatorEntity[OilPriceDataUpdateCoordinator], Sens
         data: dict[str, Any] = self.coordinator.data or {}
         value = data.get(self._field_key)
         if value is None:
+            # Keep trend readable in UI while upstream forecast is still unavailable.
+            if self._field_key == "trend":
+                return "统计中"
             return None
         return str(value)
 

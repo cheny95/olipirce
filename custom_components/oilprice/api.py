@@ -323,6 +323,16 @@ def _extract_trend_text(tips_text: Optional[str]) -> Optional[str]:
             if trend is not None:
                 return trend
 
+    # Some pages use settlement wording like "今晚汽油上涨...柴油上涨...".
+    settle_match = re.search(
+        r"(?:今晚|本次|本轮)?[^。；，]{0,12}(?:汽油|柴油)[^。；，]{0,30}(上涨|上调|上升|下调|下跌|下降|搁浅|不作调整|不做调整|维持)",
+        normalized,
+    )
+    if settle_match is not None:
+        trend = _normalize_trend_token(settle_match.group(1))
+        if trend is not None:
+            return trend
+
     # Conservative fallback: only parse when adjustment keywords lead the trend term.
     fallback_patterns = (
         r"调价[^。；，]{0,30}(上涨|上调|上升|下调|下跌|下降|搁浅|不作调整|不做调整|维持)",
@@ -390,5 +400,3 @@ def _extract_next_adjust_date_text(time_text: Optional[str]) -> Optional[str]:
     if minute_text == "00":
         return f"{date_part}{int(hour_text)}点"
     return f"{date_part}{int(hour_text)}:{minute_text}"
-
-

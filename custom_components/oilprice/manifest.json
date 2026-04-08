@@ -1,7 +1,7 @@
 {
   "domain": "oilprice",
   "name": "Oil Price",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "documentation": "https://github.com/cheny95/oilprice-for-homeassistant",
   "config_flow": true,
   "dependencies": [],
