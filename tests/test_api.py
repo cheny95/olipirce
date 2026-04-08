@@ -344,6 +344,28 @@ class ApiFetchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data["gas98"], "10.62")
         self.assertEqual(data["die0"], "8.31")
 
+    async def test_fetch_oilprice_tips_with_strong_tag(self) -> None:
+        """Test that tips extraction includes text within <strong> tags."""
+        html_with_strong = """
+        <div>
+          <h2>安徽油价调整最新消息</h2>
+          <p>2026年4月8日今日油价最新消息：国际油价下跌，美国原油价格下跌12.61%到96.32美元/桶，
+          布伦特原油价格下跌10.26%到92.31美元/桶，新一轮10个工作日统计周期，经过10个工作日统计，
+          <strong>根据国家对油价的调控，今晚汽油上涨420元/吨，柴油上涨400元/吨，
+          即92号汽油上涨0.33元/升，0号柴油上涨0.34元/升</strong>，
+          下次国内成品油价调整窗口时间为2026年4月21日24时（2026年4月22日0点）。</p>
+        </div>
+        """
+        session = _FakeSession(response=_FakeResponse(status=200, text=html_with_strong))
+
+        with patch("custom_components.oilprice.api.async_get_clientsession", return_value=session):
+            data = await api.async_fetch_oilprice(hass=object(), region="anhui")
+
+        self.assertIn("今日油价最新消息", data["tips"])
+        self.assertIn("根据国家对油价的调控", data["tips"])
+        self.assertIn("今晚汽油上涨420元/吨", data["tips"])
+        self.assertEqual(data["trend"], "上涨")
+
 
 class ApiParserTests(unittest.TestCase):
     def test_extract_trend_text(self) -> None:

@@ -87,11 +87,8 @@ def _extract_notice_fields(
     soup: BeautifulSoup, page_text: str
 ) -> Tuple[Optional[str], Optional[str]]:
     """Extract notice time and tips from huangjinjiage page text."""
-    page_lines = [_normalize_text(line) for line in soup.stripped_strings]
-    page_lines = [line for line in page_lines if line]
-
     time_text = _extract_time_text(page_text)
-    tip_text = _extract_tips_text(page_lines)
+    tip_text = _extract_tips_text(soup)
 
     return time_text, tip_text
 
@@ -281,12 +278,28 @@ def _extract_time_text(page_text: str) -> Optional[str]:
     return None
 
 
-def _extract_tips_text(page_lines: list[str]) -> Optional[str]:
-    """Extract latest trend tip text from news lines."""
+def _extract_tips_text(soup: BeautifulSoup) -> Optional[str]:
+    """Extract latest trend tip text from news paragraphs.
+
+    Finds <p> tags containing target keywords and returns their full text content,
+    including text within child elements like <strong>.
+    """
+    keywords = ["今日油价最新消息", "油价调整最新消息"]
+
+    for p in soup.find_all("p"):
+        p_text = _normalize_text(p.get_text(" ", strip=True))
+        if not p_text:
+            continue
+        for keyword in keywords:
+            if keyword in p_text:
+                return p_text
+
+    # Fallback: search in stripped_strings if no <p> tag matches
+    page_lines = [_normalize_text(line) for line in soup.stripped_strings]
+    page_lines = [line for line in page_lines if line]
     for line in page_lines:
         if "今日油价最新消息" in line:
             return line
-
     for line in page_lines:
         if "油价调整最新消息" in line:
             return line
